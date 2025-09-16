@@ -20,6 +20,7 @@ backend/migrations/__pycache__/
 backend/migrations/versions/*.pyc
 
 # Environment & secrets
+.env
 backend/.env
 
 # Logs
