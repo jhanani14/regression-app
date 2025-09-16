@@ -1,0 +1,64 @@
+# ------------------------
+# BACKEND (FastAPI + Alembic)
+# ------------------------
+# Python cache & virtualenvs
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+ENV/
+Pipfile.lock
+poetry.lock
+
+# Alembic / Migrations cache
+backend/migrations/__pycache__/
+backend/migrations/versions/*.pyc
+
+# Environment & secrets
+backend/.env
+
+# Logs
+*.log
+
+# ------------------------
+# FRONTEND (Vite + React + Tailwind)
+# ------------------------
+# Node dependencies
+frontend/node_modules/
+frontend/.pnpm/
+frontend/.npm/
+frontend/.yarn/
+
+# Build output
+frontend/dist/
+frontend/build/
+
+# Cache
+frontend/.cache/
+frontend/.vite/
+frontend/vite.config.ts.timestamp*
+
+# Local environment files
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# ------------------------
+# EDITOR & SYSTEM FILES
+# ------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp
+Thumbs.db
