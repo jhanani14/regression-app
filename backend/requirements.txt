@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pandas
+numpy
+scikit-learn
+matplotlib
+sqlalchemy
+alembic
+psycopg[binary]
+python-jose
+passlib[bcrypt]
+python-dotenv

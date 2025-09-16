@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+
+  /* Glass card */
+  .glass {
+    background-color: rgba(255, 255, 255, 0.6);
+    @apply backdrop-blur-xl shadow-card border border-white/30 rounded-2xl transition-all duration-300;
+  }
+
+  .dark .glass {
+    background-color: rgba(15, 23, 42, 0.6);
+    border-color: rgba(56, 59, 69, 0.6);
+  }
+
+  .glass-gradient {
+    @apply bg-gradient-brand bg-opacity-80 backdrop-blur-xl shadow-glow border border-white/30 rounded-2xl text-white;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply px-4 py-2 rounded-xl font-medium transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white shadow-md shadow-primary/30 hover:bg-primary hover:brightness-90 hover:shadow-glow;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary text-white shadow-md shadow-secondary/30 hover:bg-secondary hover:brightness-90 hover:shadow-lg;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-slate-700 hover:bg-slate-200/40;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full rounded-xl border border-slate-200 px-3 py-2 outline-none shadow-inner focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200;
+    background-color: rgba(255, 255, 255, 0.7);
+  }
+
+  .dark .input {
+    background-color: rgba(15, 23, 42, 0.7);
+    border-color: rgba(56, 59, 69, 0.7);
+    color: #e5e7eb;
+  }
+
+  /* Labels */
+  .label {
+    @apply text-sm font-semibold text-slate-600 mb-1;
+  }
+
+  .dark .label {
+    @apply text-slate-300;
+  }
+
+  /* Hover effect */
+  .hover-scale {
+    @apply transform transition-transform duration-200 hover:scale-105;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out both;
+}
