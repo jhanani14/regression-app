@@ -34,7 +34,7 @@ export default function MetricCards({ metrics }: { metrics?: ExperimentMetrics }
         return (
           <motion.div
             key={key}
-            className="glass p-5 rounded-xl shadow-soft hover-scale cursor-default"
+            className="glass backdrop-blur-lg p-5 rounded-xl shadow-sm hover-scale cursor-default"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1, duration: 0.3 }}

@@ -64,7 +64,7 @@ export default function Results() {
       transition={{ duration: 0.4 }}
     >
       {/* Header */}
-      <div className="glass p-6 shadow-card">
+      <div className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl hover-scale">
         <h2 className="text-3xl font-bold text-primary">Results</h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Experiment ID: {id}
@@ -75,11 +75,17 @@ export default function Results() {
       </div>
 
       {loading ? (
-        <div className="glass p-6 text-center">Loading results...</div>
+        <div className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl text-center">
+          Loading results...
+        </div>
       ) : error ? (
-        <div className="glass p-6 text-red-600">{error}</div>
+        <div className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl text-red-600">
+          {error}
+        </div>
       ) : !metrics ? (
-        <div className="glass p-6">No results available for this experiment.</div>
+        <div className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl">
+          No results available for this experiment.
+        </div>
       ) : (
         <>
           {/* Metrics Section */}
@@ -91,7 +97,7 @@ export default function Results() {
               plots.map((b64, i) => (
                 <motion.div
                   key={i}
-                  className="glass p-4 rounded-2xl shadow-card hover-scale"
+                  className="glass backdrop-blur-lg p-4 rounded-2xl shadow-md hover-scale"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
@@ -110,7 +116,7 @@ export default function Results() {
                   </h3>
                   <img
                     alt={`Plot ${i + 1}`}
-                    className="w-full rounded-xl shadow-soft"
+                    className="w-full rounded-xl shadow-sm"
                     src={`data:image/png;base64,${b64}`}
                   />
                 </motion.div>

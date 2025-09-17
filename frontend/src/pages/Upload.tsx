@@ -23,7 +23,7 @@ export default function Upload() {
       localStorage.setItem("dataset_id", res.data.dataset_id);
       setMsg(`✅ Uploaded. Dataset ID: ${res.data.dataset_id}`);
 
-      setTimeout(() => (window.location.href = "/configure"), 1000);
+      setTimeout(() => (window.location.href = "/configure"), 800);
     } catch (e: any) {
       setMsg(e?.response?.data?.detail || "❌ Upload failed");
     } finally {
@@ -32,40 +32,34 @@ export default function Upload() {
   }
 
   return (
-    <div className="min-h-[80vh] flex justify-center items-center px-4">
-      <div className="glass p-8 w-full max-w-lg animate-fadeIn">
-        <h2 className="text-2xl font-bold text-primary mb-2">
-          Upload Dataset
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+    <div className="min-h-screen flex justify-center items-center bg-slate-50 dark:bg-slate-950 transition-colors">
+      <div className="glass w-full max-w-lg p-6">
+        <h2 className="text-xl font-semibold mb-2">Upload Your Dataset</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
           Supported formats: <b>CSV</b> or <b>XLSX</b>
         </p>
 
-        {/* File Input */}
-        <label className="flex flex-col items-center justify-center border-2 border-dashed border-primary/40 rounded-xl p-6 cursor-pointer hover:bg-primary/5 transition">
-          <input
-            type="file"
-            accept=".csv,.xlsx"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="hidden"
-          />
-          <UploadIcon size={36} className="text-primary mb-3" />
-          <span className="text-sm text-slate-600 dark:text-slate-300">
-            {file ? file.name : "Click or drag file to upload"}
-          </span>
-        </label>
+        <input
+          type="file"
+          accept=".csv,.xlsx"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          className="file:mr-3 file:py-2 file:px-4 file:rounded-lg 
+                     file:border-0 file:bg-blue-600 file:text-white 
+                     hover:file:bg-blue-700 cursor-pointer w-full"
+        />
 
         <button
           onClick={handleUpload}
           disabled={!file || busy}
-          className="btn-primary w-full mt-4 hover-scale"
+          className="btn-primary mt-4 flex items-center justify-center gap-2 w-full"
         >
+          <UploadIcon size={18} />
           {busy ? "Uploading..." : "Upload"}
         </button>
 
         {msg && (
           <div
-            className={`mt-4 text-sm p-3 rounded-lg ${
+            className={`mt-4 text-sm p-2 rounded-lg ${
               msg.startsWith("✅")
                 ? "bg-green-100 text-green-700"
                 : "bg-red-100 text-red-700"

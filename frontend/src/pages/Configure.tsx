@@ -104,7 +104,7 @@ export default function Configure() {
     <div className="grid gap-6 animate-fadeIn">
       {/* Header */}
       <motion.div
-        className="glass p-6 shadow-card"
+        className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl hover-scale"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -118,7 +118,7 @@ export default function Configure() {
 
       {/* Column selection */}
       <motion.div
-        className="glass p-6 shadow-card"
+        className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -162,7 +162,7 @@ export default function Configure() {
 
       {/* Algorithm selection */}
       <motion.div
-        className="glass p-6 shadow-card"
+        className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -203,7 +203,7 @@ export default function Configure() {
 
       {/* Split + Run */}
       <motion.div
-        className="glass p-6 grid sm:grid-cols-2 gap-4 shadow-card"
+        className="glass backdrop-blur-lg p-6 grid sm:grid-cols-2 gap-4 shadow-md rounded-2xl"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}

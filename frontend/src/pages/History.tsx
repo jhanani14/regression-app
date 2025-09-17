@@ -3,7 +3,7 @@ import api from "@/api";
 import RunHistoryTable from "@/components/RunHistoryTable";
 import { ExperimentItem } from "@/types";
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react"; // ✅ Guaranteed icon
+import { Clock } from "lucide-react";
 
 export default function History() {
   const [rows, setRows] = useState<ExperimentItem[]>([]);
@@ -31,21 +31,25 @@ export default function History() {
       animate={{ opacity: 1, y: 0 }}
     >
       {/* Header */}
-      <div className="glass p-6 flex items-center gap-3 shadow-card">
-        <Clock size={24} className="text-primary" /> {/* ✅ Changed to Clock */}
+      <div className="glass backdrop-blur-lg p-6 flex items-center gap-3 shadow-md rounded-2xl hover-scale">
+        <Clock size={24} className="text-primary" />
         <h2 className="text-3xl font-bold text-primary">Experiment History</h2>
       </div>
 
       {loading ? (
-        <div className="glass p-6 text-center">Loading...</div>
+        <div className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl text-center">
+          Loading...
+        </div>
       ) : error ? (
-        <div className="glass p-6 text-red-600">{error}</div>
+        <div className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl text-red-600">
+          {error}
+        </div>
       ) : rows.length === 0 ? (
-        <div className="glass p-6 text-slate-500 text-center">
+        <div className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl text-slate-500 text-center">
           No experiments found. Upload a dataset and run one!
         </div>
       ) : (
-        <div className="glass p-0 overflow-hidden shadow-card">
+        <div className="glass backdrop-blur-lg p-0 overflow-hidden shadow-md rounded-2xl">
           <div className="overflow-x-auto">
             <RunHistoryTable rows={rows} />
           </div>
