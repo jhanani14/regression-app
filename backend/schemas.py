@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Literal, Optional
 
 
 class UserCreate(BaseModel):
@@ -32,3 +32,15 @@ class ExperimentOut(BaseModel):
 
     class Config:
         from_attributes = True   # ✅
+
+
+# ✅ NEW SCHEMA: AlgorithmInfo for API response
+class AlgorithmDetail(BaseModel):
+    type: Literal["classification", "regression"]
+    description: str
+    best_for: str
+
+
+class AlgorithmInfoResponse(BaseModel):
+    classification_algorithms: Dict[str, AlgorithmDetail]
+    regression_algorithms: Dict[str, AlgorithmDetail]

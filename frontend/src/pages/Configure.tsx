@@ -9,15 +9,17 @@ export default function Configure() {
   const [target, setTarget] = useState("");
   const [features, setFeatures] = useState<string[]>([]);
   const [split, setSplit] = useState(0.2);
+
   const [algorithm, setAlgorithm] = useState("linear_regression");
-  const [algorithms, setAlgorithms] = useState<string[]>([]);
-  const [algoInfo, setAlgoInfo] = useState<Record<string, any>>({});
+  const [algoInfo, setAlgoInfo] = useState<{ classification_algorithms?: any; regression_algorithms?: any }>({});
   const [recommended, setRecommended] = useState<string | null>(null);
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const datasetId = localStorage.getItem("dataset_id");
 
+  // Fetch dataset info (columns + dtypes)
   useEffect(() => {
     const fetchInfo = async () => {
       if (!datasetId) return;
@@ -32,6 +34,7 @@ export default function Configure() {
     fetchInfo();
   }, [datasetId]);
 
+  // Auto-select recommended algorithm based on dtype
   useEffect(() => {
     if (target && dtypes[target]) {
       const dtype = dtypes[target];
@@ -45,31 +48,7 @@ export default function Configure() {
     }
   }, [target, dtypes]);
 
-  useEffect(() => {
-    const fetchAlgos = async () => {
-      try {
-        const res = await api.get("/experiments/algorithms");
-        if (Array.isArray(res.data?.algorithms)) setAlgorithms(res.data.algorithms);
-      } catch {
-        setAlgorithms([
-          "linear_regression",
-          "ridge_regression",
-          "lasso_regression",
-          "random_forest_regressor",
-          "gradient_boosting_regressor",
-          "decision_tree_regressor",
-          "logistic_regression",
-          "random_forest_classifier",
-          "gradient_boosting_classifier",
-          "decision_tree_classifier",
-          "svm_classifier",
-          "knn_classifier",
-        ]);
-      }
-    };
-    fetchAlgos();
-  }, []);
-
+  // Fetch algorithm info from backend
   useEffect(() => {
     const fetchAlgoInfo = async () => {
       try {
@@ -79,6 +58,14 @@ export default function Configure() {
     };
     fetchAlgoInfo();
   }, []);
+
+  // Determine which algorithms to display based on target dtype
+  const isClassification =
+    target && (dtypes[target] === "object" || dtypes[target] === "category");
+
+  const availableAlgorithms = isClassification
+    ? Object.keys(algoInfo.classification_algorithms || {})
+    : Object.keys(algoInfo.regression_algorithms || {});
 
   async function runExperiment() {
     if (!datasetId) return;
@@ -167,20 +154,23 @@ export default function Configure() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <div className="label">Algorithm</div>
+        <div className="label">
+          Algorithm ({isClassification ? "Classification" : "Regression"})
+        </div>
         <select
           value={algorithm}
           onChange={(e) => setAlgorithm(e.target.value)}
           className="input w-60"
         >
-          {algorithms.map((algo) => (
+          {availableAlgorithms.map((algo) => (
             <option key={algo} value={algo}>
               {algo.replace(/_/g, " ")}
             </option>
           ))}
         </select>
 
-        {algoInfo[algorithm] && (
+        {/* Algorithm info box */}
+        {algoInfo[isClassification ? "classification_algorithms" : "regression_algorithms"]?.[algorithm] && (
           <motion.div
             className="mt-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800 shadow-inner"
             initial={{ opacity: 0 }}
@@ -192,10 +182,12 @@ export default function Configure() {
               </span>
             )}
             <p className="text-sm">
-              <strong>Description:</strong> {algoInfo[algorithm].description}
+              <strong>Description:</strong>{" "}
+              {algoInfo[isClassification ? "classification_algorithms" : "regression_algorithms"][algorithm].description}
             </p>
             <p className="text-sm mt-1">
-              <strong>Best For:</strong> {algoInfo[algorithm].best_for}
+              <strong>Best For:</strong>{" "}
+              {algoInfo[isClassification ? "classification_algorithms" : "regression_algorithms"][algorithm].best_for}
             </p>
           </motion.div>
         )}

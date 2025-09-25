@@ -13,8 +13,9 @@ from reportlab.lib.utils import ImageReader
 
 from backend.deps import get_db, get_current_user
 from backend.models import Experiment, ExperimentMetric, ExperimentArtifact, Dataset, DatasetFile
-from backend.ml.pipeline import train_pipeline, ALGORITHMS
-from backend.ml.algorithms import ALGORITHM_INFO
+from backend.ml.pipeline import train_pipeline
+from backend.ml.classification_algorithms import CLASSIFICATION_ALGORITHMS
+from backend.ml.regression_algorithms import REGRESSION_ALGORITHMS
 from backend.ml.plots import (
     residual_plot, predicted_vs_actual,
     confusion_matrix_plot, roc_curve_plot
@@ -22,18 +23,16 @@ from backend.ml.plots import (
 
 router = APIRouter(prefix="/experiments", tags=["experiments"])
 
-
 # ============================
-# List Algorithms + Descriptions (✅ MOVED ABOVE)
+# Algorithm Info (✅ UPDATED)
 # ============================
-@router.get("/algorithms")
-def list_algorithms():
-    return {"algorithms": list(ALGORITHMS.keys())}
-
 @router.get("/algorithm-info")
 def get_algorithm_info():
-    """Return detailed algorithm descriptions for frontend."""
-    return ALGORITHM_INFO
+    """Return detailed algorithm descriptions for frontend, separated into groups."""
+    return {
+        "classification_algorithms": CLASSIFICATION_ALGORITHMS,
+        "regression_algorithms": REGRESSION_ALGORITHMS
+    }
 
 
 # ============================
@@ -151,7 +150,6 @@ def download_experiment_pdf(
     token: str = Query(None),
     db: Session = Depends(get_db),
 ):
-    # Optional token verification
     if token:
         try:
             jwt.decode(token, os.getenv("JWT_SECRET", "change-me"), algorithms=["HS256"])
