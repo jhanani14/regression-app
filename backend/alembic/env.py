@@ -6,20 +6,15 @@ from sqlalchemy import engine_from_config, pool
 from dotenv import load_dotenv
 
 # ------------------------------
-# Paths setup
+# Add project root to sys.path
 # ------------------------------
-# backend folder
-BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# project root (regression-app)
-PROJECT_ROOT = os.path.abspath(os.path.join(BACKEND_DIR, ".."))
-
-# Add backend to sys.path so 'app' can be imported
-sys.path.append(BACKEND_DIR)
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(ROOT_DIR)
 
 # ------------------------------
-# Load environment variables from root .env
+# Load .env from project root
 # ------------------------------
-load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
+load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
@@ -40,7 +35,7 @@ if config.config_file_name is not None:
 # ------------------------------
 # Import Base for autogenerate
 # ------------------------------
-from app.db.base import Base  # Base must import all models
+from app.db.base import Base  # Base must include all models
 target_metadata = Base.metadata
 
 # ------------------------------
@@ -54,7 +49,6 @@ def run_migrations_offline():
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
-
     with context.begin_transaction():
         context.run_migrations()
 
@@ -67,18 +61,17 @@ def run_migrations_online():
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
-
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            compare_type=True  # detect type changes in models
+            compare_type=True  # optional, detects column type changes
         )
         with context.begin_transaction():
             context.run_migrations()
 
 # ------------------------------
-# Run migrations
+# Run migrations based on mode
 # ------------------------------
 if context.is_offline_mode():
     run_migrations_offline()

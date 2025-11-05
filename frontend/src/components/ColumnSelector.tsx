@@ -12,6 +12,7 @@ export default function ColumnSelector({ columns, target, setTarget, features, s
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
+      {/* Target selector */}
       <div className="glass backdrop-blur-lg p-4 rounded-2xl hover-scale">
         <div className="label">Target</div>
         <select className="input" value={target} onChange={(e) => setTarget(e.target.value)}>
@@ -22,6 +23,7 @@ export default function ColumnSelector({ columns, target, setTarget, features, s
         </select>
       </div>
 
+      {/* Features selector */}
       <div className="glass backdrop-blur-lg p-4 rounded-2xl hover-scale">
         <div className="label">Features</div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1 max-h-56 overflow-auto pr-1">

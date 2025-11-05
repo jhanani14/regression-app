@@ -1,5 +1,3 @@
-# backend/ml/classification_algorithms.py
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier

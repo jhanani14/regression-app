@@ -5,35 +5,47 @@ from datetime import datetime
 import pandas as pd
 import io, base64, os
 from jose import jwt, JWTError
-
 from pydantic import BaseModel
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+import math
 
-from backend.deps import get_db, get_current_user
-from backend.models import Experiment, ExperimentMetric, ExperimentArtifact, Dataset, DatasetFile
-from backend.ml.pipeline import train_pipeline
-from backend.ml.classification_algorithms import CLASSIFICATION_ALGORITHMS
-from backend.ml.regression_algorithms import REGRESSION_ALGORITHMS
-from backend.ml.plots import (
-    residual_plot, predicted_vs_actual,
-    confusion_matrix_plot, roc_curve_plot
+# ✅ Imports from your app
+from app.deps import get_db, get_current_user
+from app.models.experiment import Experiment, ExperimentMetric, ExperimentArtifact
+from app.models.dataset import Dataset
+from app.models.dataset_file import DatasetFile
+from app.services.ml_pipeline import train_pipeline
+from app.services.classification import CLASSIFICATION_ALGORITHMS
+from app.services.regression import REGRESSION_ALGORITHMS
+from app.services.plots import (
+    residual_plot,
+    predicted_vs_actual,
+    confusion_matrix_plot,
+    roc_curve_plot,
 )
+from app.services import storage  # ✅ Use your unified storage handler
 
 router = APIRouter(prefix="/experiments", tags=["experiments"])
 
 # ============================
-# Algorithm Info (✅ UPDATED)
+# Helper to clean metrics
+# ============================
+def clean_metrics(metrics: dict):
+    """Replace NaN or Inf values with 0.0 for JSON serialization."""
+    return {k: (0.0 if (v is None or math.isnan(v) or math.isinf(v)) else v) for k, v in metrics.items()}
+
+# ============================
+# Algorithm Info
 # ============================
 @router.get("/algorithm-info")
 def get_algorithm_info():
-    """Return detailed algorithm descriptions for frontend, separated into groups."""
+    """Return algorithm descriptions for frontend."""
     return {
         "classification_algorithms": CLASSIFICATION_ALGORITHMS,
-        "regression_algorithms": REGRESSION_ALGORITHMS
+        "regression_algorithms": REGRESSION_ALGORITHMS,
     }
-
 
 # ============================
 # Schemas
@@ -45,12 +57,15 @@ class RunRequest(BaseModel):
     split: float = 0.2
     algorithm: str = "linear_regression"
 
-
 # ============================
 # Run Experiment
 # ============================
 @router.post("/run")
-def run_experiment(req: RunRequest, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def run_experiment(
+    req: RunRequest,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
     dataset = db.query(Dataset).filter(Dataset.id == req.dataset_id).first()
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
@@ -59,7 +74,19 @@ def run_experiment(req: RunRequest, db: Session = Depends(get_db), user=Depends(
     if not dataset_file:
         raise HTTPException(status_code=404, detail="Dataset file not found")
 
-    df = pd.read_csv(io.BytesIO(dataset_file.data))
+    try:
+        file_bytes = storage.download_to_bytes(dataset_file.s3_key)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading dataset: {str(e)}")
+
+    try:
+        if dataset_file.s3_key.endswith(".xlsx"):
+            df = pd.read_excel(io.BytesIO(file_bytes))
+        else:
+            df = pd.read_csv(io.BytesIO(file_bytes))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
+
     if req.target not in df.columns:
         raise HTTPException(status_code=400, detail=f"Target '{req.target}' not found in dataset")
 
@@ -80,35 +107,56 @@ def run_experiment(req: RunRequest, db: Session = Depends(get_db), user=Depends(
     db.refresh(exp)
 
     for k, v in metrics.items():
-        db.add(ExperimentMetric(experiment_id=exp.id, metric_name=k, metric_value=v))
+        db.add(
+            ExperimentMetric(experiment_id=exp.id, metric_name=k, metric_value=float(v))
+        )
 
     if any(x in req.algorithm for x in ["classifier", "logistic", "svm", "knn"]):
         cm_plot = confusion_matrix_plot(y_test, preds)
-        db.add(ExperimentArtifact(experiment_id=exp.id, artifact_path="confusion_matrix.png", data=cm_plot))
-
+        db.add(
+            ExperimentArtifact(
+                experiment_id=exp.id, artifact_path="confusion_matrix.png", data=cm_plot
+            )
+        )
         roc_plot = roc_curve_plot(pipeline, X_test, y_test)
         if roc_plot:
-            db.add(ExperimentArtifact(experiment_id=exp.id, artifact_path="roc_curve.png", data=roc_plot))
+            db.add(
+                ExperimentArtifact(
+                    experiment_id=exp.id, artifact_path="roc_curve.png", data=roc_plot
+                )
+            )
     else:
         res_plot = residual_plot(y_test, preds)
         pva_plot = predicted_vs_actual(y_test, preds)
-        db.add(ExperimentArtifact(experiment_id=exp.id, artifact_path="residual_plot.png", data=res_plot))
-        db.add(ExperimentArtifact(experiment_id=exp.id, artifact_path="predicted_vs_actual.png", data=pva_plot))
+        db.add(
+            ExperimentArtifact(
+                experiment_id=exp.id, artifact_path="residual_plot.png", data=res_plot
+            )
+        )
+        db.add(
+            ExperimentArtifact(
+                experiment_id=exp.id,
+                artifact_path="predicted_vs_actual.png",
+                data=pva_plot,
+            )
+        )
 
     db.commit()
     return {"experiment_id": exp.id}
-
 
 # ============================
 # Get Experiment
 # ============================
 @router.get("/{experiment_id}")
-def get_experiment(experiment_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_experiment(
+    experiment_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)
+):
     exp = db.query(Experiment).filter(Experiment.id == experiment_id).first()
     if not exp:
         raise HTTPException(status_code=404, detail="Experiment not found")
 
     metrics = {m.metric_name: m.metric_value for m in exp.metrics}
+    metrics = clean_metrics(metrics)  # ✅ Clean NaN/Inf values
     plots = [base64.b64encode(a.data).decode("utf-8") for a in exp.artifacts]
 
     return {
@@ -122,7 +170,6 @@ def get_experiment(experiment_id: int, db: Session = Depends(get_db), user=Depen
         "plots": plots,
     }
 
-
 # ============================
 # List Experiments
 # ============================
@@ -135,11 +182,10 @@ def list_experiments(db: Session = Depends(get_db), user=Depends(get_current_use
             "created_at": e.created_at.isoformat(),
             "target": e.target,
             "status": e.status,
-            "metrics": {m.metric_name: m.metric_value for m in e.metrics}
+            "metrics": clean_metrics({m.metric_name: m.metric_value for m in e.metrics}),
         }
         for e in exps
     ]
-
 
 # ============================
 # Download Experiment as PDF
@@ -162,7 +208,7 @@ def download_experiment_pdf(
     if not exp:
         raise HTTPException(status_code=404, detail="Experiment not found")
 
-    metrics = {m.metric_name: m.metric_value for m in exp.metrics}
+    metrics = clean_metrics({m.metric_name: m.metric_value for m in exp.metrics})
     plots = [a.data for a in exp.artifacts]
 
     buffer = io.BytesIO()
@@ -175,7 +221,9 @@ def download_experiment_pdf(
     c.setFont("Helvetica", 12)
     c.drawString(50, height - 80, f"Algorithm: {exp.algorithm}")
     c.drawString(50, height - 100, f"Target: {exp.target}")
-    c.drawString(50, height - 120, f"Created At: {exp.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    c.drawString(
+        50, height - 120, f"Created At: {exp.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+    )
 
     c.setFont("Helvetica-Bold", 14)
     c.drawString(50, height - 160, "Metrics:")
@@ -192,7 +240,15 @@ def download_experiment_pdf(
         if y - img_height < 50:
             c.showPage()
             y = height - 50
-        c.drawImage(img, 50, y - img_height, width=500, height=img_height, preserveAspectRatio=True, mask="auto")
+        c.drawImage(
+            img,
+            50,
+            y - img_height,
+            width=500,
+            height=img_height,
+            preserveAspectRatio=True,
+            mask="auto",
+        )
         y -= img_height + 40
 
     c.save()
@@ -201,5 +257,5 @@ def download_experiment_pdf(
     return StreamingResponse(
         buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=experiment_{exp.id}.pdf"}
+        headers={"Content-Disposition": f"attachment; filename=experiment_{exp.id}.pdf"},
     )

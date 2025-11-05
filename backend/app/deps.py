@@ -1,15 +1,15 @@
+# app/deps.py
 from fastapi import Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 import os
 
-from backend.db import SessionLocal
-from backend import models
+from app.db.session import SessionLocal
+from app import models
 
 # Secret + algorithm
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
 JWT_ALGORITHM = "HS256"
-
 
 # --- Database Session Dependency ---
 def get_db():
@@ -18,7 +18,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 # --- Auth Dependency ---
 def get_current_user(

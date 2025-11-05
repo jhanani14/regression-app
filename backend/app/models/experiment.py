@@ -1,43 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, LargeBinary, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Float, LargeBinary
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from backend.db import Base
-
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    datasets = relationship("Dataset", back_populates="user")
-
-
-class Dataset(Base):
-    __tablename__ = "datasets"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    uploaded_at = Column(DateTime, default=datetime.utcnow)
-    user_id = Column(Integer, ForeignKey("users.id"))
-
-    user = relationship("User", back_populates="datasets")
-    files = relationship("DatasetFile", back_populates="dataset")
-    experiments = relationship("Experiment", back_populates="dataset")
-
-
-class DatasetFile(Base):
-    __tablename__ = "dataset_files"
-
-    id = Column(Integer, primary_key=True, index=True)
-    dataset_id = Column(Integer, ForeignKey("datasets.id"))
-    filename = Column(String, nullable=False)
-    data = Column(LargeBinary, nullable=False)
-
-    dataset = relationship("Dataset", back_populates="files")
-
+from app.db.session import Base
 
 class Experiment(Base):
     __tablename__ = "experiments"
@@ -46,7 +10,6 @@ class Experiment(Base):
     dataset_id = Column(Integer, ForeignKey("datasets.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # ✅ extra fields for frontend
     target = Column(String, nullable=True)
     features = Column(Text, nullable=True)     # store comma-separated list
     algorithm = Column(String, nullable=True)

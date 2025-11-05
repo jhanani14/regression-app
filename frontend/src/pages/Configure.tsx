@@ -25,16 +25,14 @@ export default function Configure() {
       if (!datasetId) return;
       try {
         const res = await api.get(`/datasets/${datasetId}/info`);
-        if (Array.isArray(res.data?.columns)) {
-          setColumns(res.data.columns);
-          setDtypes(res.data.dtypes || {});
-        }
+        setColumns(res.data.columns || []);
+        setDtypes(res.data.dtypes || {});
       } catch {}
     };
     fetchInfo();
   }, [datasetId]);
 
-  // Auto-select recommended algorithm based on dtype
+  // Auto-select recommended algorithm based on target dtype
   useEffect(() => {
     if (target && dtypes[target]) {
       const dtype = dtypes[target];
@@ -59,14 +57,13 @@ export default function Configure() {
     fetchAlgoInfo();
   }, []);
 
-  // Determine which algorithms to display based on target dtype
-  const isClassification =
-    target && (dtypes[target] === "object" || dtypes[target] === "category");
-
+  // Determine classification vs regression
+  const isClassification = target && (dtypes[target] === "object" || dtypes[target] === "category");
   const availableAlgorithms = isClassification
     ? Object.keys(algoInfo.classification_algorithms || {})
     : Object.keys(algoInfo.regression_algorithms || {});
 
+  // Run experiment
   async function runExperiment() {
     if (!datasetId) return;
     setBusy(true);
@@ -89,18 +86,15 @@ export default function Configure() {
 
   return (
     <div className="grid gap-6 animate-fadeIn">
+
       {/* Header */}
       <motion.div
         className="glass backdrop-blur-lg p-6 shadow-md rounded-2xl hover-scale"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h2 className="text-3xl font-bold text-primary mb-2">
-          Configure Experiment
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Dataset ID: {datasetId ?? "-"}
-        </p>
+        <h2 className="text-3xl font-bold text-primary mb-2">Configure Experiment</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Dataset ID: {datasetId ?? "-"}</p>
       </motion.div>
 
       {/* Column selection */}
@@ -110,9 +104,7 @@ export default function Configure() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <h3 className="text-lg font-semibold mb-4 text-primary">
-          Select Target & Features
-        </h3>
+        <h3 className="text-lg font-semibold mb-4 text-primary">Select Target & Features</h3>
         {columns.length > 0 ? (
           <ColumnSelector
             columns={columns}
@@ -122,28 +114,7 @@ export default function Configure() {
             setFeatures={setFeatures}
           />
         ) : (
-          <>
-            <div className="label">Target column</div>
-            <input
-              className="input mb-4"
-              placeholder="e.g., price"
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-            />
-            <div className="label">Features (comma-separated)</div>
-            <input
-              className="input"
-              placeholder="e.g., rooms,area,age"
-              onChange={(e) =>
-                setFeatures(
-                  e.target.value
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter(Boolean)
-                )
-              }
-            />
-          </>
+          <p>Loading columns...</p>
         )}
       </motion.div>
 
@@ -169,7 +140,7 @@ export default function Configure() {
           ))}
         </select>
 
-        {/* Algorithm info box */}
+        {/* Algorithm info */}
         {algoInfo[isClassification ? "classification_algorithms" : "regression_algorithms"]?.[algorithm] && (
           <motion.div
             className="mt-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800 shadow-inner"
@@ -193,7 +164,7 @@ export default function Configure() {
         )}
       </motion.div>
 
-      {/* Split + Run */}
+      {/* Test split & Run */}
       <motion.div
         className="glass backdrop-blur-lg p-6 grid sm:grid-cols-2 gap-4 shadow-md rounded-2xl"
         initial={{ opacity: 0, y: 15 }}
@@ -201,7 +172,7 @@ export default function Configure() {
         transition={{ delay: 0.3 }}
       >
         <div>
-          <div className="label">Test split (0.1 - 0.9)</div>
+          <div className="label">Test Split (0.1 - 0.9)</div>
           <input
             type="number"
             min={0.1}
@@ -214,15 +185,16 @@ export default function Configure() {
         </div>
         <div className="self-end">
           <button
-            className="btn-primary w-full hover-scale"
             onClick={runExperiment}
             disabled={busy || !target || features.length === 0}
+            className="btn-primary w-full hover-scale"
           >
             {busy ? "Running..." : "🚀 Run Experiment"}
           </button>
         </div>
       </motion.div>
 
+      {/* Error Message */}
       {error && (
         <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm">
           {error}

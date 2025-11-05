@@ -1,11 +1,13 @@
 # ------------------------
-# BACKEND (FastAPI + Alembic)
+# BACKEND (Python + FastAPI + Alembic)
 # ------------------------
+
 # Python cache & virtualenvs
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.egg
 *.egg-info/
 .eggs/
 .venv/
@@ -14,6 +16,8 @@ env/
 ENV/
 Pipfile.lock
 poetry.lock
+dist/
+build/
 
 # Alembic / Migrations cache
 backend/migrations/__pycache__/
@@ -26,9 +30,32 @@ backend/.env
 # Logs
 *.log
 
+# Test cache & coverage
+*.pytest_cache/
+.coverage
+htmlcov/
+
+# Local database files (if using SQLite)
+*.db
+*.sqlite3
+
+# Docker / Compose overrides
+docker-compose.override.yml
+.env.docker
+.env.dev
+
+# AWS credentials (safety)
+.aws/
+
+# Temporary files
+*.pid
+*.seed
+tmp/
+
 # ------------------------
 # FRONTEND (Vite + React + Tailwind)
 # ------------------------
+
 # Node dependencies
 frontend/node_modules/
 frontend/.pnpm/
@@ -43,6 +70,9 @@ frontend/build/
 frontend/.cache/
 frontend/.vite/
 frontend/vite.config.ts.timestamp*
+frontend/.parcel-cache/
+frontend/.next/
+frontend/out/
 
 # Local environment files
 frontend/.env
@@ -58,8 +88,19 @@ frontend/pnpm-debug.log*
 # ------------------------
 # EDITOR & SYSTEM FILES
 # ------------------------
+
+# macOS
 .DS_Store
+
+# IDEs
 .idea/
 .vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Swap files
 *.swp
+
+# Windows
 Thumbs.db
+
