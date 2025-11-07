@@ -1,118 +1,50 @@
-# REGRESSION-APP
+# Regression App
 
-A full-stack regression web application built with FastAPI, React + Vite + TailwindCSS, and PostgreSQL (Neon).  
-It allows users to upload datasets, run regression experiments, view metrics & plots, and track experiment history.
+A full-stack web application for running regression experiments. The backend is built with **FastAPI**, PostgreSQL (RDS), and AWS services like S3. The frontend is built using **Vite/React** and deployed on **AWS Amplify**.
 
-## Features
+---
 
-- **User Authentication**: JWT-based register/login
-- **Dataset Management**: Upload CSV/XLSX datasets; store metadata & column types.
-- **Regression Experiments**:
-  - Train/test split
-  - Scaling & one-hot encoding
-  - Metrics: R², MAE, MSE, RMSE
-  - Plots: Predicted vs Actual, Residuals
-  - Save models and plots in DB
-- **Experiment History**: View past runs and artifacts
-- **PDF Export**: (Optional) Download experiment reports.
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Tech Stack](#tech-stack)
+- [Setup Instructions](#setup-instructions)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [Environment Variables](#environment-variables)
+- [Deployment](#deployment)
+- [Connecting Frontend & Backend](#connecting-frontend--backend)
+- [Requirements](#requirements)
+
+
+---
+
+## Project Overview
+
+- Backend hosted on **AWS EC2** with **Elastic IP**.
+- Database hosted on **AWS RDS (PostgreSQL)**.
+- File storage using **AWS S3**.
+- Frontend hosted on **AWS Amplify** and connected to the backend via API.
+- Implements authentication using JWT.
+- Run regression experiments, manage datasets, and store results.
+
+---
 
 ## Tech Stack
 
-- **Backend**: FastAPI, SQLAlchemy, Alembic, PostgreSQL (Neon)
-- **Frontend**: React, Vite, TailwindCSS, TypeScript
-- **Authentication**: JWT, bcrypt
-- **Data Science**: pandas, numpy, scikit-learn, matplotlib
+**Backend:** FastAPI, Uvicorn, PostgreSQL, SQLAlchemy, Alembic, Boto3, Pydantic  
+**Frontend:** React, Vite, AWS Amplify  
+**Cloud Services:** AWS EC2, RDS, S3, Amplify  
 
+---
 
-## PROJECT STRUCTURE
+## Setup Instructions
 
-regression-app/
-├─ backend/
-│ ├─ app.py              # FastAPI app entrypoint
-│ ├─ auth.py             # JWT authentication (register/login)
-│ ├─ deps.py            # Dependency utilities (current user, auth)
-│ ├─ db.py               # SQLAlchemy engine & session
-│ ├─ models.py       # Database models
-│ ├─ schemas.py     # Pydantic request/response schemas
-│ ├─ routers/
-│ │ ├─ datasets.py                   # Dataset upload endpoints
-│ │ └─ experiments.py             # Run experiments & fetch results
-│ ├─ ml/
-│ │ ├─ pipeline.py                 # Regression pipeline
-│ │ └─ plots.py                     # Generate metrics plots (PNG)
-│ ├─ tests/                             # Unit & integration tests
-│ ├─ migrations/                   # Alembic migration scripts
-│ ├─ alembic.ini                    # Alembic configuration
-│ ├─ requirements.txt            # Python dependencies
-│ ├─ .env                               # Environment variables (local only)
-│ └─ init.py                          # Package marker
-│
-├─ frontend/
-│ ├─ index.html
-│ ├─ package.json
-│ ├─ vite.config.ts
-│ ├─ tsconfig.json
-│ ├─ postcss.config.js
-│ ├─ tailwind.config.js
-│ ├─ src/
-│ │ ├─ main.tsx
-│ │ ├─ App.tsx
-│ │ ├─ api.ts                          # Axios base instance (JWT token)
-│ │ ├─ pages/                        # Pages: Auth, Upload, Configure, Results, History
-│ │ └─ components/              # Reusable components (MetricCards, Tables)
-│ └─ public/                           # Static assets
-│
-├─ .gitignore
+### Backend Setup
 
+1. SSH into your EC2 instance:
 
-## SETUP INSTRUCTIONS
+```bash
+ssh -i path/to/regression-app-key.pem ubuntu@<EC2_PUBLIC_IP>
 
-1. Clone Repository
-git clone <repo-url> regression-app
-cd regression-app
-
-2. Setup Backend
-cd backend
-python -m venv .venv
-# Activate
-# macOS/Linux:
-source .venv/bin/activate
-# Windows:
-.venv\Scripts\activate
-
-pip install -r requirements.txt
-
-3. Configure .env
-Create backend/.env:
-DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST/DB?sslmode=require
-JWT_SECRET=your-secret-key
-JWT_EXPIRE_MIN=30
-CORS_ORIGINS=http://localhost:5173
-
-4. Run Database Migrations (Alembic)
-alembic upgrade head
-
-5. Start Backend
-uvicorn app:app --reload --port 8000
-
-6. Setup Frontend
-cd ../frontend
-npm install
-npm run dev
-
-## End-to-End Flow
-
-1.	Register/Login → JWT token stored in browser.
-2.	Upload Dataset → CSV/XLSX → metadata saved in DB.
-3.	Configure Experiment → choose target column, features, regression algorithm, train/test split.
-4.	Run Experiment → backend computes metrics, generates plots, stores model & artifacts.
-5.	Results Page → shows metrics and plots.
-6.	History Page → list past runs and details.
-
-## Database (Neon / PostgreSQL)
-
-•	Tables: users, datasets, dataset_columns, experiments, experiment_metrics, experiment_artifacts.
-•	Check Neon console for rows:
-SELECT * FROM experiments ORDER BY created_at DESC LIMIT 5;
-SELECT octet_length(model_bin) FROM experiment_artifacts ORDER BY 1 DESC LIMIT 5;
 
