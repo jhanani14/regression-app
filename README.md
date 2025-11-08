@@ -47,4 +47,25 @@ A full-stack web application for running regression experiments. The backend is 
 ```bash
 ssh -i path/to/regression-app-key.pem ubuntu@<EC2_PUBLIC_IP>
 
+2. Navigate to backend folder:
 
+cd ~/regression-app/backend
+
+
+3. Create and activate virtual environment:
+
+python3 -m venv .venv
+source .venv/bin/activate
+
+
+4. Install dependencies:
+
+pip install -r requirements.txt
+
+
+5. Run the backend server:
+
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+
+Backend should now be accessible at http://<EC2_PUBLIC_IP>:8000.
