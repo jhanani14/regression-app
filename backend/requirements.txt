@@ -17,3 +17,5 @@ boto3
 pydantic[email]
 pydantic-settings
 reportlab
+
+mangum
