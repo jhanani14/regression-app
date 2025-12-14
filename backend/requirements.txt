@@ -1,21 +1,24 @@
 fastapi
-uvicorn[standard]
+mangum
+
 python-multipart
+python-dotenv
+
 pydantic
-pandas
-numpy
-scikit-learn
-matplotlib
+pydantic[email]
+pydantic-settings
+
 sqlalchemy
 alembic
 psycopg[binary]
+
 python-jose
 passlib[bcrypt]
-python-dotenv
 
 boto3
-pydantic[email]
-pydantic-settings
 reportlab
 
-mangum
+# ---- AWS Lambda compatible ML stack ----
+numpy==1.26.4
+pandas==2.1.4
+scikit-learn==1.3.2
