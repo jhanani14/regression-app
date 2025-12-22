@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# Node / frontend (safety)
+node_modules/
+frontend/
+
+# Uploads / datasets
+uploads/
+data/
+datasets/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Tests / cache
+.pytest_cache/
+.coverage
+htmlcov/

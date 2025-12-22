@@ -1,24 +1,32 @@
+# Web & API
 fastapi
+uvicorn[standard]
 mangum
-
 python-multipart
 python-dotenv
 
+# Data validation
 pydantic
 pydantic[email]
 pydantic-settings
 
+# Database & migrations
 sqlalchemy
 alembic
 psycopg[binary]
 
+# Auth & security
 python-jose
 passlib[bcrypt]
 
+# AWS
 boto3
 reportlab
 
-# ---- AWS Lambda compatible ML stack ----
+# ML & Data
 numpy==1.26.4
 pandas==2.1.4
 scikit-learn==1.3.2
+matplotlib  # needed for plotting
+joblib      # scikit-learn uses this
+threadpoolctl  # scikit-learn uses this
