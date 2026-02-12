@@ -13,7 +13,13 @@ from app.routers import auth, datasets, experiments, results
 # -------------------------
 # Initialize FastAPI
 # -------------------------
-app = FastAPI(title="Regression/Classification App", default_response_class=ORJSONResponse)
+app = FastAPI(
+    title="Regression/Classification App", 
+    default_response_class=ORJSONResponse,
+    docs_url=None,  # Temporarily disable docs to avoid schema generation issues
+    redoc_url=None,
+    openapi_url=None
+)
 
 
 # -------------------------

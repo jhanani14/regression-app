@@ -4,16 +4,24 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Absolute path to project root
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-dotenv_path = os.path.join(PROJECT_ROOT, ".env")
-load_dotenv(dotenv_path)
-
+# Check environment variables first (Docker-friendly), then try .env file
 DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError(f"DATABASE_URL is not set in {dotenv_path}")
 
-engine = create_engine(DATABASE_URL, echo=True, pool_pre_ping=True)
+# If not in environment, try loading from .env file
+if not DATABASE_URL:
+    PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+    dotenv_path = os.path.join(PROJECT_ROOT, ".env")
+    if os.path.exists(dotenv_path):
+        load_dotenv(dotenv_path)
+        DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError(
+        "DATABASE_URL is not set. Please set it as an environment variable "
+        "or in a .env file in the project root."
+    )
+
+engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True, pool_size=5, max_overflow=10)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

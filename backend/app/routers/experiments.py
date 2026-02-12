@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
-import pandas as pd
+# Lazy-load pandas to avoid segfault issues in Docker Desktop Mac
+# pandas will only be imported when actually needed
 import io, base64, os
 from jose import jwt, JWTError
 from pydantic import BaseModel
@@ -19,12 +20,23 @@ from app.models.dataset_file import DatasetFile
 from app.services.ml_pipeline import train_pipeline
 from app.services.classification import CLASSIFICATION_ALGORITHMS
 from app.services.regression import REGRESSION_ALGORITHMS
-from app.services.plots import (
-    residual_plot,
-    predicted_vs_actual,
-    confusion_matrix_plot,
-    roc_curve_plot,
-)
+# Temporarily disable matplotlib plots due to Docker Desktop Mac threading issues
+# from app.services.plots import (
+#     residual_plot,
+#     predicted_vs_actual,
+#     confusion_matrix_plot,
+#     roc_curve_plot,
+# )
+
+# Placeholder functions that return None (no plots)
+def residual_plot(y_true, y_pred):
+    return None
+def predicted_vs_actual(y_true, y_pred):
+    return None
+def confusion_matrix_plot(y_true, y_pred):
+    return None
+def roc_curve_plot(model, X_test, y_test):
+    return None
 from app.services import storage  # ✅ Use your unified storage handler
 
 router = APIRouter(prefix="/experiments", tags=["experiments"])
@@ -42,9 +54,21 @@ def clean_metrics(metrics: dict):
 @router.get("/algorithm-info")
 def get_algorithm_info():
     """Return algorithm descriptions for frontend."""
+    # Return only metadata, not the actual model instances
+    def get_algorithm_metadata(algorithms):
+        result = {}
+        for key, value in algorithms.items():
+            result[key] = {
+                "type": value["type"],
+                "description": value["description"],
+                "best_for": value["best_for"],
+                # Don't include the model instance
+            }
+        return result
+    
     return {
-        "classification_algorithms": CLASSIFICATION_ALGORITHMS,
-        "regression_algorithms": REGRESSION_ALGORITHMS,
+        "classification_algorithms": get_algorithm_metadata(CLASSIFICATION_ALGORITHMS),
+        "regression_algorithms": get_algorithm_metadata(REGRESSION_ALGORITHMS),
     }
 
 # ============================
@@ -80,6 +104,7 @@ def run_experiment(
         raise HTTPException(status_code=500, detail=f"Error reading dataset: {str(e)}")
 
     try:
+        import pandas as pd  # Lazy-load pandas
         if dataset_file.s3_key.endswith(".xlsx"):
             df = pd.read_excel(io.BytesIO(file_bytes))
         else:
@@ -111,13 +136,16 @@ def run_experiment(
             ExperimentMetric(experiment_id=exp.id, metric_name=k, metric_value=float(v))
         )
 
+    # Temporarily disabled plots due to Docker threading issues
+    # Plots will return None and won't be saved
     if any(x in req.algorithm for x in ["classifier", "logistic", "svm", "knn"]):
         cm_plot = confusion_matrix_plot(y_test, preds)
-        db.add(
-            ExperimentArtifact(
-                experiment_id=exp.id, artifact_path="confusion_matrix.png", data=cm_plot
+        if cm_plot:  # Only add if plot was generated
+            db.add(
+                ExperimentArtifact(
+                    experiment_id=exp.id, artifact_path="confusion_matrix.png", data=cm_plot
+                )
             )
-        )
         roc_plot = roc_curve_plot(pipeline, X_test, y_test)
         if roc_plot:
             db.add(
@@ -127,19 +155,21 @@ def run_experiment(
             )
     else:
         res_plot = residual_plot(y_test, preds)
+        if res_plot:  # Only add if plot was generated
+            db.add(
+                ExperimentArtifact(
+                    experiment_id=exp.id, artifact_path="residual_plot.png", data=res_plot
+                )
+            )
         pva_plot = predicted_vs_actual(y_test, preds)
-        db.add(
-            ExperimentArtifact(
-                experiment_id=exp.id, artifact_path="residual_plot.png", data=res_plot
+        if pva_plot:  # Only add if plot was generated
+            db.add(
+                ExperimentArtifact(
+                    experiment_id=exp.id,
+                    artifact_path="predicted_vs_actual.png",
+                    data=pva_plot,
+                )
             )
-        )
-        db.add(
-            ExperimentArtifact(
-                experiment_id=exp.id,
-                artifact_path="predicted_vs_actual.png",
-                data=pva_plot,
-            )
-        )
 
     db.commit()
     return {"experiment_id": exp.id}

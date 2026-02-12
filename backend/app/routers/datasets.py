@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime
-import pandas as pd
+# Lazy-load pandas to avoid segfault issues in Docker Desktop Mac
 from io import BytesIO
 
 from app.deps import get_db, get_current_user
@@ -22,6 +22,9 @@ async def upload_dataset(
     Upload CSV/XLSX file, store it in S3/local storage, and return dataset_id + columns.
     """
     try:
+        # Lazy-load pandas
+        import pandas as pd
+        
         # Read file into bytes
         file_bytes = await file.read()
 
@@ -84,6 +87,9 @@ def get_columns(
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     try:
+        # Lazy-load pandas
+        import pandas as pd
+        
         if dataset_file.s3_key:
             data = storage.download_to_bytes(dataset_file.s3_key)
         else:
@@ -115,6 +121,9 @@ def get_dataset_info(
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     try:
+        # Lazy-load pandas
+        import pandas as pd
+        
         if dataset_file.s3_key:
             data = storage.download_to_bytes(dataset_file.s3_key)
         else:

@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: regression-db
+    environment:
+      POSTGRES_USER: regression_user
+      POSTGRES_PASSWORD: regression_password
+      POSTGRES_DB: regression_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U regression_user -d regression_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - regression-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: regression-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://regression_user:regression_password@db:5432/regression_db
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      JWT_EXPIRE_MIN: 30
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost:8080
+      USE_S3: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/backend_local_storage:/app/backend_local_storage
+    networks:
+      - regression-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  regression-network:
+    driver: bridge
